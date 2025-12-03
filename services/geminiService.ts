@@ -90,3 +90,55 @@ export const generateFullScript = async (topic: SuggestedTopic, referenceScript:
     throw new Error("최종 대본 생성에 실패했습니다.");
   }
 };
+
+// 여러 대본을 분석하여 공통 흥행 요소 추출 및 재장착된 주제 제안 (5개 이상)
+export const analyzeMultipleScripts = async (scripts: string[]): Promise<SuggestedTopic[]> => {
+  try {
+    const ai = createAI();
+    
+    const scriptsText = scripts.map((script, index) => 
+      `[대본 ${index + 1}]
+${script}
+`).join('\n---\n\n');
+
+    const response = await ai.models.generateContent({
+      model: MODEL_NAME,
+      contents: `당신은 유튜브 콘텐츠 전문 분석가입니다.
+      
+      아래 여러 개의 대본을 분석하여:
+      1. **공통적인 흥행 요소**를 찾아내세요 (구조, 문체, 후킹 전략, 타겟층, 전개 방식 등)
+      2. 이 흥행 요소를 활용하되 **저작권 위험이 없도록 완전히 재장착된 새로운 주제 5개 이상**을 제안하세요.
+      
+      중요: 
+      - 원본 대본의 구체적인 내용이나 고유한 스토리를 그대로 사용하지 마세요
+      - 흥행 요소(패턴, 구조, 톤)만 추출하여 완전히 다른 주제에 적용하세요
+      - 각 주제는 클릭을 부르는 제목 형태로 작성하세요
+      - 최소 5개 이상의 다양한 주제를 제안하세요
+
+      분석할 대본들:
+      ${scriptsText}`,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING, description: '재장착된 새로운 주제의 제목' },
+              rationale: { type: Type.STRING, description: '이 주제가 왜 흥행할 것인지, 어떤 공통 요소를 활용했는지 설명' },
+            },
+            required: ['title', 'rationale'],
+          },
+        },
+      },
+    });
+
+    if (response.text) {
+      return JSON.parse(response.text) as SuggestedTopic[];
+    }
+    throw new Error('No data returned from AI');
+  } catch (error) {
+    console.error('Error analyzing multiple scripts:', error);
+    throw new Error('다중 대본 분석에 실패했습니다.');
+  }
+};

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { ScriptState, SuggestedTopic } from './types';
-import { analyzeAndSuggestTopics, generateFullScript } from './services/geminiService';
+import { analyzeAndSuggestTopics, generateFullScript, analyzeMultipleScripts } from './services/geminiService';
 import { Button } from './components/Button';
 import { StepIndicator } from './components/StepIndicator';
 import { ApiKeyManager } from './components/ApiKeyManager';
+import { FileUpload } from './components/FileUpload';
 import { Copy, RefreshCw, PenTool, Sparkles, Youtube, ArrowLeft } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -16,6 +17,8 @@ const App: React.FC = () => {
     error: null,
     step: 'INPUT',
   });
+
+  const [uploadedScripts, setUploadedScripts] = useState<string[]>([]);
 
   const handleAnalyze = async () => {
     if (!state.originalInput.trim()) return;
@@ -38,10 +41,36 @@ const App: React.FC = () => {
     }
   };
 
+  const handleAnalyzeMultiple = async (scripts: string[]) => {
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    try {
+      const topics = await analyzeMultipleScripts(scripts);
+      setUploadedScripts(scripts);
+      setState(prev => ({
+        ...prev,
+        topics,
+        isLoading: false,
+        step: 'TOPIC_SELECTION',
+        originalInput: `[${scripts.length}개 파일 분석]`, // 참고용
+      }));
+    } catch (error) {
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: "다중 대본 분석에 실패했습니다. 다시 시도해주세요.",
+      }));
+    }
+  };
+
   const handleGenerate = async (topic: SuggestedTopic) => {
     setState(prev => ({ ...prev, selectedTopic: topic, isLoading: true, error: null }));
     try {
-      const script = await generateFullScript(topic, state.originalInput);
+      // 여러 파일을 분석한 경우, 첫 번째 파일을 참고 대본으로 사용
+      const referenceScript = uploadedScripts.length > 0 
+        ? uploadedScripts[0] 
+        : state.originalInput;
+      
+      const script = await generateFullScript(topic, referenceScript);
       setState(prev => ({
         ...prev,
         generatedScript: script,
@@ -67,6 +96,7 @@ const App: React.FC = () => {
       error: null,
       step: 'INPUT',
     });
+    setUploadedScripts([]);
   };
 
   const goBackToTopics = () => {
@@ -136,6 +166,18 @@ const App: React.FC = () => {
                 </Button>
               </div>
             </div>
+            
+            {/* 다중 파일 업로드 */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-800"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-gray-950 text-gray-500">또는</span>
+              </div>
+            </div>
+            
+            <FileUpload onAnalyze={handleAnalyzeMultiple} isLoading={state.isLoading} />
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12 text-gray-400">
               <div className="flex flex-col items-center text-center p-4">

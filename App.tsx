@@ -3,6 +3,7 @@ import { ScriptState, SuggestedTopic } from './types';
 import { analyzeAndSuggestTopics, generateFullScript } from './services/geminiService';
 import { Button } from './components/Button';
 import { StepIndicator } from './components/StepIndicator';
+import { ApiKeyManager } from './components/ApiKeyManager';
 import { Copy, RefreshCw, PenTool, Sparkles, Youtube, ArrowLeft } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -84,6 +85,9 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 p-6 md:p-12 font-sans">
+      {/* API Key Manager */}
+      <ApiKeyManager />
+      
       <div className="max-w-4xl mx-auto">
         
         {/* Header */}

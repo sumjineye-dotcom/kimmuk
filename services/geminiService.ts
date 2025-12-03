@@ -1,12 +1,28 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { SuggestedTopic } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+// API 키 가져오기: localStorage 우선, 없으면 환경 변수 사용
+const getApiKey = (): string => {
+  const storedKey = typeof window !== 'undefined' 
+    ? localStorage.getItem('gemini_api_key') 
+    : null;
+  
+  return storedKey || import.meta.env.VITE_GEMINI_API_KEY || '';
+};
+
+const createAI = () => {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error('API 키가 설정되지 않았습니다. 우측 상단에서 API 키를 입력해주세요.');
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 const MODEL_NAME = "gemini-2.5-flash";
 
 export const analyzeAndSuggestTopics = async (inputScript: string): Promise<SuggestedTopic[]> => {
   try {
+    const ai = createAI();
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
       contents: `다음 텍스트(유튜브 대본 또는 아이디어)를 분석하세요. 
@@ -45,6 +61,7 @@ export const analyzeAndSuggestTopics = async (inputScript: string): Promise<Sugg
 
 export const generateFullScript = async (topic: SuggestedTopic, referenceScript: string): Promise<string> => {
   try {
+    const ai = createAI();
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
       contents: `당신은 전문 유튜브 대본 작가입니다. 

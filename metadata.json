@@ -1,0 +1,5 @@
+{
+  "name": "TubeScript AI",
+  "description": "사용자의 아이디어를 분석하여 바이럴 주제를 제안하고, 맞춤형 대본을 생성해주는 AI 유튜브 대본 생성기입니다.",
+  "requestFramePermissions": []
+}

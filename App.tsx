@@ -99,6 +99,16 @@ const App: React.FC = () => {
     setUploadedScripts([]);
   };
 
+  const goBackToInput = () => {
+    setState(prev => ({
+      ...prev,
+      step: 'INPUT',
+      topics: [],
+      error: null,
+    }));
+    // uploadedScripts와 originalInput은 유지
+  };
+
   const goBackToTopics = () => {
     setState(prev => ({
         ...prev,
@@ -204,8 +214,9 @@ const App: React.FC = () => {
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-white">다음 주제를 선택하세요</h2>
-              <Button variant="ghost" onClick={reset} className="text-sm">
-                처음으로
+              <Button variant="ghost" onClick={goBackToInput} className="text-sm">
+                <ArrowLeft size={16} />
+                뒤로 가기
               </Button>
             </div>
             

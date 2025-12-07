@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScriptState, SuggestedTopic } from './types';
+import { ScriptState, SuggestedTopic, ScriptStructure, ScriptStructureOption } from './types';
 import { analyzeAndSuggestTopics, generateFullScript, analyzeMultipleScripts } from './services/geminiService';
 import { Button } from './components/Button';
 import { StepIndicator } from './components/StepIndicator';
@@ -12,6 +12,7 @@ const App: React.FC = () => {
     originalInput: '',
     topics: [],
     selectedTopic: null,
+    selectedStructure: null,
     generatedScript: '',
     isLoading: false,
     error: null,
@@ -23,6 +24,33 @@ const App: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [requiredKeywords, setRequiredKeywords] = useState<string>('');
   const [regenerateKeywords, setRegenerateKeywords] = useState<string>('');
+
+  const scriptStructureOptions: ScriptStructureOption[] = [
+    {
+      id: 'in-medias-res',
+      name: '인 미디어스 레스',
+      description: '인트로 후킹형',
+      details: '가장 흥미로운 장면부터 시작 → 과거 설명 → 여정 → 결과',
+    },
+    {
+      id: 'fiction-curved',
+      name: '픽션 커브드',
+      description: '고구마 후 사이다형',
+      details: '문제 제기 → 문제 심화 → 전환점 → 해결책 → 성공 사례',
+    },
+    {
+      id: 'save-the-cat',
+      name: '세이브 더 캣',
+      description: '인생역전 드라마형',
+      details: '평범한 시작 → 촉매제 → 고민 → 시련 → 위기 → 극복 → 변화',
+    },
+    {
+      id: 'story-circle',
+      name: '댄 하몬의 스토리 서클',
+      description: '영웅 여정 8단계',
+      details: '편안함 → 필요 → 난관 진입 → 탐색 → 획든 → 대가 → 귀환 → 변화',
+    },
+  ];
 
   const handleAnalyze = async () => {
     if (!state.originalInput.trim()) return;
@@ -69,15 +97,25 @@ const App: React.FC = () => {
     }
   };
 
-  const handleGenerate = async (topic: SuggestedTopic) => {
-    setState(prev => ({ ...prev, selectedTopic: topic, isLoading: true, error: null }));
+  const handleSelectTopic = (topic: SuggestedTopic) => {
+    setState(prev => ({ 
+      ...prev, 
+      selectedTopic: topic, 
+      step: 'STRUCTURE_SELECTION' 
+    }));
+  };
+
+  const handleSelectStructure = async (structure: ScriptStructure) => {
+    if (!state.selectedTopic) return;
+    
+    setState(prev => ({ ...prev, selectedStructure: structure, isLoading: true, error: null }));
     try {
       // 여러 파일을 분석한 경우, 첫 번째 파일을 참고 대본으로 사용
       const referenceScript = uploadedScripts.length > 0 
         ? uploadedScripts[0] 
         : state.originalInput;
       
-      const script = await generateFullScript(topic, referenceScript);
+      const script = await generateFullScript(state.selectedTopic, referenceScript, structure);
       setState(prev => ({
         ...prev,
         generatedScript: script,
@@ -121,6 +159,7 @@ const App: React.FC = () => {
       originalInput: '',
       topics: [],
       selectedTopic: null,
+      selectedStructure: null,
       generatedScript: '',
       isLoading: false,
       error: null,
@@ -149,7 +188,18 @@ const App: React.FC = () => {
         ...prev,
         step: 'TOPIC_SELECTION',
         generatedScript: '',
-        selectedTopic: null
+        selectedTopic: null,
+        selectedStructure: null,
+    }));
+  };
+
+  const goBackToStructureSelection = () => {
+    setState(prev => ({
+      ...prev,
+      step: 'STRUCTURE_SELECTION',
+      selectedStructure: null,
+      generatedScript: '',
+      error: null,
     }));
   };
 
@@ -297,13 +347,13 @@ const App: React.FC = () => {
               {state.topics.map((topic, idx) => (
                 <button
                   key={idx}
-                  onClick={() => handleGenerate(topic)}
+                  onClick={() => handleSelectTopic(topic)}
                   disabled={state.isLoading}
                   className="group relative flex flex-col items-start text-left p-6 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-indigo-500 rounded-xl transition-all duration-300 shadow-lg hover:shadow-indigo-900/20"
                 >
                   <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity hidden md:block">
                      <span className="text-indigo-400 text-sm font-semibold flex items-center gap-1">
-                       대본 생성하기 <ArrowLeft className="rotate-180" size={16}/>
+                       구조 선택하기 <ArrowLeft className="rotate-180" size={16}/>
                      </span>
                   </div>
                   <h3 className="text-xl font-bold text-white group-hover:text-indigo-300 mb-2 pr-0 md:pr-8">
@@ -357,7 +407,60 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* View 3: Result */}
+        {/* View 3: Structure Selection */}
+        {state.step === 'STRUCTURE_SELECTION' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">대본 구조를 선택하세요</h2>
+                <p className="text-gray-400">선택한 주제: <span className="text-indigo-400 font-semibold">{state.selectedTopic?.title}</span></p>
+              </div>
+              <Button variant="ghost" onClick={goBackToTopics} className="text-sm">
+                <ArrowLeft size={16} />
+                주제 다시 선택
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {scriptStructureOptions.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => handleSelectStructure(option.id)}
+                  disabled={state.isLoading}
+                  className="group relative flex flex-col items-start text-left p-6 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-indigo-500 rounded-xl transition-all duration-300 shadow-lg hover:shadow-indigo-900/20"
+                >
+                  <div className="mb-3">
+                    <h3 className="text-xl font-bold text-white group-hover:text-indigo-300 mb-1">
+                      {option.name}
+                    </h3>
+                    <p className="text-indigo-400 text-sm font-semibold">
+                      {option.description}
+                    </p>
+                  </div>
+                  <p className="text-gray-400 text-sm leading-relaxed">
+                    {option.details}
+                  </p>
+                  <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-indigo-400 text-sm font-semibold flex items-center gap-1">
+                      선택 <ArrowLeft className="rotate-180" size={16}/>
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {state.isLoading && (
+               <div className="flex justify-center py-12">
+                   <div className="flex flex-col items-center gap-4">
+                       <div className="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+                       <p className="text-indigo-300 animate-pulse font-medium">선택한 구조로 대본을 작성 중입니다...</p>
+                   </div>
+               </div>
+            )}
+          </div>
+        )}
+
+        {/* View 4: Result */}
         {state.step === 'SCRIPT_VIEW' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -366,8 +469,8 @@ const App: React.FC = () => {
                 <h3 className="text-2xl font-bold text-white">{state.selectedTopic?.title}</h3>
               </div>
               <div className="flex gap-2 w-full md:w-auto">
-                <Button variant="secondary" onClick={goBackToTopics} className="flex-1 md:flex-none">
-                  뒤로가기
+                <Button variant="secondary" onClick={goBackToStructureSelection} className="flex-1 md:flex-none">
+                  구조 다시 선택
                 </Button>
                 <Button variant="primary" onClick={copyToClipboard} className="flex-1 md:flex-none">
                   <Copy size={18} />

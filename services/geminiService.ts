@@ -30,7 +30,7 @@ export const analyzeAndSuggestTopics = async (inputScript: string, requiredKeywo
     
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: `당신은 유튜브 콘텐츠 분석 전문가입니다.
+      content: `당신은 유튜브 콘텐츠 분석 전문가입니다.
       
       **분석 목표:**
       아래 제공된 대본을 면밀히 분석하여 다음을 수행하세요:
@@ -232,7 +232,7 @@ export const generateFullScript = async (
     
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: `당신은 전문 유튜브 대본 작가입니다. 
+      content: `당신은 전문 유튜브 대본 작가입니다. 
       사용자가 선택한 주제와 스토리 구조로 유튜브 대본을 작성해야 합니다.
 
       **선택된 스토리 구조:**
@@ -301,7 +301,7 @@ ${script}
 
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: `당신은 유튜브 콘텐츠 분석 전문가입니다.
+      content: `당신은 유튜브 콘텐츠 분석 전문가입니다.
       
       **분석 목표:**
       아래 여러 대본을 면밀히 분석하여 다음을 수행하세요:
@@ -379,7 +379,7 @@ export const regenerateTopicsWithKeywords = async (
     
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: `당신은 유튜브 콘텐츠 전문가입니다.
+      content: `당신은 유튜브 콘텐츠 전문가입니다.
 
       **이미 분석된 대본 구조:**
       ${structureSummary}

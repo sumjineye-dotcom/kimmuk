@@ -158,7 +158,7 @@ const App: React.FC = () => {
                 <Button 
                   onClick={handleAnalyze} 
                   isLoading={state.isLoading}
-                  disabled={!state.originalInput.trim()}
+                  disabled={state.isLoading || !state.originalInput.trim()}
                   className="w-full md:w-auto"
                 >
                   <Sparkles size={20} />

@@ -20,9 +20,14 @@ const createAI = () => {
 
 const MODEL_NAME = "gemini-2.5-flash";
 
-export const analyzeAndSuggestTopics = async (inputScript: string): Promise<SuggestedTopic[]> => {
+export const analyzeAndSuggestTopics = async (inputScript: string, requiredKeywords?: string): Promise<SuggestedTopic[]> => {
   try {
     const ai = createAI();
+    
+    const keywordInstruction = requiredKeywords?.trim() 
+      ? `\n\n**필수 키워드:** 다음 키워드를 제목에 반드시 포함하세요: ${requiredKeywords}`
+      : '';
+    
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
       contents: `당신은 유튜브 바이럴 콘텐츠 전문가입니다.
@@ -35,7 +40,7 @@ export const analyzeAndSuggestTopics = async (inputScript: string): Promise<Sugg
       - 제목은 원작과 유사한 구조/패턴 사용 (클릭률 보장)
       - 하지만 스토리는 완전히 다른 방향 (차별화)
       - 다른 분야, 다른 타겟, 다른 접근법으로 재해석
-      - 각 제목은 클릭을 부르는 형태로 작성
+      - 각 제목은 클릭을 부르는 형태로 작성${keywordInstruction}
       
       **예시:**
       원작: "10분만에 엑셀 마스터 - 직장인 필수 함수 5가지"
@@ -118,7 +123,7 @@ export const generateFullScript = async (topic: SuggestedTopic, referenceScript:
 };
 
 // 여러 대본을 분석하여 공통 흥행 요소 추출 및 재장착된 주제 제안 (5개 이상)
-export const analyzeMultipleScripts = async (scripts: string[]): Promise<SuggestedTopic[]> => {
+export const analyzeMultipleScripts = async (scripts: string[], requiredKeywords?: string): Promise<SuggestedTopic[]> => {
   try {
     const ai = createAI();
     
@@ -126,6 +131,10 @@ export const analyzeMultipleScripts = async (scripts: string[]): Promise<Suggest
       `[대본 ${index + 1}]
 ${script}
 `).join('\n---\n\n');
+
+    const keywordInstruction = requiredKeywords?.trim() 
+      ? `\n- **필수 키워드:** 다음 키워드를 제목에 반드시 포함하세요: ${requiredKeywords}`
+      : '';
 
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
@@ -139,7 +148,7 @@ ${script}
       - 제목 구조는 검증된 원작 패턴 활용 (클릭률 보장)
       - 스토리는 완전히 다른 각도/분야/타겟으로 재해석
       - 원본의 구체적 내용 복사 금지, 패턴만 차용
-      - 저작권 안전하게 "재장착"
+      - 저작권 안전하게 "재장착"${keywordInstruction}
       
       **예시:**
       공통 패턴: "N분만에 X하는 법 - 필수 Y개"

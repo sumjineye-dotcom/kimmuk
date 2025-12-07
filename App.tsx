@@ -19,13 +19,14 @@ const App: React.FC = () => {
   });
 
   const [uploadedScripts, setUploadedScripts] = useState<string[]>([]);
+  const [requiredKeywords, setRequiredKeywords] = useState<string>('');
 
   const handleAnalyze = async () => {
     if (!state.originalInput.trim()) return;
 
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      const topics = await analyzeAndSuggestTopics(state.originalInput);
+      const topics = await analyzeAndSuggestTopics(state.originalInput, requiredKeywords);
       setState(prev => ({
         ...prev,
         topics,
@@ -44,7 +45,7 @@ const App: React.FC = () => {
   const handleAnalyzeMultiple = async (scripts: string[]) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      const topics = await analyzeMultipleScripts(scripts);
+      const topics = await analyzeMultipleScripts(scripts, requiredKeywords);
       setUploadedScripts(scripts);
       setState(prev => ({
         ...prev,
@@ -164,6 +165,24 @@ const App: React.FC = () => {
                 value={state.originalInput}
                 onChange={(e) => setState(prev => ({ ...prev, originalInput: e.target.value }))}
               />
+              
+              {/* 필수 키워드 입력 */}
+              <div className="mt-4">
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  주제에 꼭 포함할 키워드 (선택사항)
+                </label>
+                <input
+                  type="text"
+                  className="w-full bg-gray-950 border border-gray-700 rounded-xl p-3 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                  placeholder="예: AI, 개발자, 2024 (쉼표로 구분)"
+                  value={requiredKeywords}
+                  onChange={(e) => setRequiredKeywords(e.target.value)}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  입력한 키워드가 제안되는 주제 제목에 포함됩니다
+                </p>
+              </div>
+              
               <div className="mt-6 flex justify-end">
                 <Button 
                   onClick={handleAnalyze} 

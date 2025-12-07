@@ -240,7 +240,12 @@ const App: React.FC = () => {
               </div>
             </div>
             
-            <FileUpload onAnalyze={handleAnalyzeMultiple} isLoading={state.isLoading} />
+            <FileUpload 
+              onAnalyze={handleAnalyzeMultiple} 
+              isLoading={state.isLoading}
+              initialFiles={uploadedFiles}
+              initialContents={uploadedScripts}
+            />
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12 text-gray-400">
               <div className="flex flex-col items-center text-center p-4">

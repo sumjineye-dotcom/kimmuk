@@ -1,15 +1,23 @@
 import { Upload, X, FileText, Sparkles } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './Button';
 
 interface FileUploadProps {
   onAnalyze: (contents: string[], files: File[]) => void;
   isLoading: boolean;
+  initialFiles?: File[];
+  initialContents?: string[];
 }
 
-export const FileUpload = ({ onAnalyze, isLoading }: FileUploadProps) => {
-  const [files, setFiles] = useState<File[]>([]);
-  const [fileContents, setFileContents] = useState<string[]>([]);
+export const FileUpload = ({ onAnalyze, isLoading, initialFiles = [], initialContents = [] }: FileUploadProps) => {
+  const [files, setFiles] = useState<File[]>(initialFiles);
+  const [fileContents, setFileContents] = useState<string[]>(initialContents);
+
+  // 외부에서 전달된 초기 파일로 상태 업데이트
+  useEffect(() => {
+    setFiles(initialFiles);
+    setFileContents(initialContents);
+  }, [initialFiles, initialContents]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);

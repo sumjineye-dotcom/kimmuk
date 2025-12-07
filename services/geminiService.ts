@@ -30,26 +30,39 @@ export const analyzeAndSuggestTopics = async (inputScript: string, requiredKeywo
     
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: `당신은 유튜브 바이럴 콘텐츠 전문가입니다.
+      contents: `당신은 유튜브 콘텐츠 분석 전문가입니다.
       
-      아래 대본을 분석하여:
-      1. **원작의 핵심 구조와 패턴**을 요약하세요 (오프닝 방식, 전개 구조, 톤, 타겟 등)
-      2. 그 제목 구조를 활용한 **변형 제목 5개**를 제안하세요
+      **분석 목표:**
+      아래 제공된 대본을 면밀히 분석하여 다음을 수행하세요:
       
-      **중요 규칙:**
-      - 제목은 원작과 유사한 구조/패턴 사용 (클릭률 보장)
-      - 하지만 스토리는 완전히 다른 방향 (차별화)
-      - 다른 분야, 다른 타겟, 다른 접근법으로 재해석
-      - 각 제목은 클릭을 부르는 형태로 작성${keywordInstruction}
+      1. **대본의 이야기 흐름과 구조 분석** (구조 요약에 포함할 내용):
+         - 주제와 핵심 메시지
+         - 이야기 전개 방식 (오프닝 → 분론 → 결론 등 각 섹션의 역할)
+         - 사용된 스토리텔링 기법 (문제제기, 해결, 공감, 반전 등)
+         - 후킹 포인트와 클릭유도 요소
+         - 타겟 청중과 톤 (친근함, 전문성, 유머 등)
+         - 문장 길이, 리듬, 표현 스타일
       
-      입력된 대본:
-      "${inputScript}"`,
+      2. **분석한 구조를 활용한 변형 주제 5개 제안**:
+         - 제목은 원작의 후킹 패턴/구조를 활용 (예: 숫자, 키워드 배치 등)
+         - 하지만 주제와 이야기는 완전히 다른 분야/타겟/각도로
+         - 각 제목은 클릭을 유도하는 형태로${keywordInstruction}
+      
+      **분석대상 대본:**
+      "${inputScript}"
+      
+      **출력 형식:**
+      - structureSummary: 위 대본의 이야기 흐름, 구조, 특징을 상세히 분석한 요약 (3-5문단)
+      - topics: 5개의 변형 주제`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            structureSummary: { type: Type.STRING, description: "대본의 핵심 구조와 패턴 요약" },
+            structureSummary: { 
+              type: Type.STRING, 
+              description: "업로드한 대본의 이야기 흐름, 구조, 스토리텔링 기법, 톤, 타겟 청중 등을 상세히 분석한 요약 (3-5문단)" 
+            },
             topics: {
               type: Type.ARRAY,
               items: {
@@ -276,26 +289,39 @@ ${script}
 
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: `당신은 유튜브 콘텐츠 전문 분석가입니다.
+      contents: `당신은 유튜브 콘텐츠 분석 전문가입니다.
       
-      아래 여러 개의 대본을 분석하여:
-      1. **공통적인 제목 패턴과 흥행 요소**를 요약하세요 (구조, 숫자 사용, 키워드, 후킹 방식, 타겟 등)
-      2. 그 패턴을 활용한 **변형 제목 5개 이상**을 제안하세요
+      **분석 목표:**
+      아래 여러 대본을 면밀히 분석하여 다음을 수행하세요:
       
-      **핵심 전략:**
-      - 제목 구조는 검증된 원작 패턴 활용 (클릭률 보장)
-      - 스토리는 완전히 다른 각도/분야/타겟으로 재해석
-      - 원본의 구체적 내용 복사 금지, 패턴만 차용
-      - 저작권 안전하게 "재장착"${keywordInstruction}
-
-      분석할 대본들:
-      ${scriptsText}`,
+      1. **대본들의 공통 이야기 흐름과 구조 분서** (구조 요약에 포함할 내용):
+         - 공통 주제와 핵심 메시지 패턴
+         - 공통된 이야기 전개 방식 (오프닝, 분론, 결론 각 섹션의 역할)
+         - 공통 스토리텔링 기법 (문제제기, 해결, 공감, 반전 등)
+         - 후킹 포인트와 클릭유도 요소 (숫자, 키워드, 제목 패턴)
+         - 타겟 청중과 톤 (친근함, 전문성, 유머 등)
+         - 문장 길이, 리듬, 표현 스타일
+      
+      2. **분석한 공통 구조를 활용한 변형 주제 5개 제안**:
+         - 제목은 공통 후킹 패턴/구조를 활용 (예: 숫자, 키워드 배치 등)
+         - 하지만 주제와 이야기는 완전히 다른 분야/타겟/각도로
+         - 각 제목은 클릭을 유도하는 형태로${keywordInstruction}
+      
+      **분석대상 대본들:**
+      ${scriptsText}
+      
+      **출력 형식:**
+      - structureSummary: 위 대본들의 공통 이야기 흐름, 구조, 특징을 상세히 분석한 요약 (3-5문단)
+      - topics: 5개의 변형 주제`,
       config: {
         responseMimeType: 'application/json',
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            structureSummary: { type: Type.STRING, description: '여러 대본의 공통 패턴과 흥행 요소 요약' },
+            structureSummary: { 
+              type: Type.STRING, 
+              description: '업로드한 대본들의 공통 이야기 흐름, 구조, 스토리텔링 기법, 톤, 타겟 청중 등을 상세히 분석한 요약 (3-5문단)' 
+            },
             topics: {
               type: Type.ARRAY,
               items: {

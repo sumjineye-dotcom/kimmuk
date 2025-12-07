@@ -43,10 +43,16 @@ export const analyzeAndSuggestTopics = async (inputScript: string, requiredKeywo
          - 타겟 청중과 톤 (친근함, 전문성, 유머 등)
          - 문장 길이, 리듬, 표현 스타일
       
-      2. **분석한 구조를 활용한 변형 주제 5개 제안**:
-         - 제목은 원작의 후킹 패턴/구조를 활용 (예: 숫자, 키워드 배치 등)
-         - 하지만 주제와 이야기는 완전히 다른 분야/타겟/각도로
-         - 각 제목은 클릭을 유도하는 형태로${keywordInstruction}
+      2. **분석한 구조와 기법을 적용한 새로운 주제 5개 제안**:
+         - **핵심 원칙**: 원본의 구조, 기법, 톤은 그대로 사용하되, 등장인물과 사건은 완전히 다르게
+         - 원본의 이야기를 카피하면 절대 안됨 (예: 원본이 "50년 전 타임캡슐"이면 "오래된 물건 발견" 구조는 유지하되 "망해진 가게", "폐허" 등 다른 소재)
+         - 원본의 전개 방식을 모방하되, 새로운 인물/장소/상황으로 채우기
+         - 제목 패턴 유지 (예: 원본이 "숫자 + 키워드"면 동일 패턴 사용)${keywordInstruction}
+      
+      **예시:**
+      - 원본: "50년 전 본 타임캡슐, 그 안에서 발견된 할아버지의 유언이 불러온 기적"
+      - 분석된 구조: 오래된 물건 발견 → 안에 숨겨진 메시지 → 기적/감동 결말
+      - 적용 예: "25년 후 수십억 발견으로 돌아오다" (구조 동일, 소재는 돈/투자)
       
       **분석대상 대본:**
       "${inputScript}"
@@ -68,8 +74,14 @@ export const analyzeAndSuggestTopics = async (inputScript: string, requiredKeywo
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  title: { type: Type.STRING, description: "원작 제목을 변형한 새로운 제목" },
-                  rationale: { type: Type.STRING, description: "원작과 어떤 구조를 공유하고, 스토리는 어떻게 다른지 설명" },
+                  title: { 
+                    type: Type.STRING, 
+                    description: "원본의 제목 패턴을 적용한 새로운 주제 제목 (등장인물/사건은 완전히 다르게)" 
+                  },
+                  rationale: { 
+                    type: Type.STRING, 
+                    description: "원본의 어떤 구조와 기법을 적용했는지, 등장인물과 사건은 어떻게 달라졌는지 설명" 
+                  },
                 },
                 required: ["title", "rationale"],
               },
@@ -302,10 +314,11 @@ ${script}
          - 타겟 청중과 톤 (친근함, 전문성, 유머 등)
          - 문장 길이, 리듬, 표현 스타일
       
-      2. **분석한 공통 구조를 활용한 변형 주제 5개 제안**:
-         - 제목은 공통 후킹 패턴/구조를 활용 (예: 숫자, 키워드 배치 등)
-         - 하지만 주제와 이야기는 완전히 다른 분야/타겟/각도로
-         - 각 제목은 클릭을 유도하는 형태로${keywordInstruction}
+      2. **분석한 공통 구조와 기법을 적용한 새로운 주제 5개 제안**:
+         - **핵심 원칙**: 원본들의 공통 구조, 기법, 톤은 그대로 사용하되, 등장인물과 사건은 완전히 다르게
+         - 원본의 이야기를 카피하면 절대 안됨
+         - 원본의 전개 방식을 모방하되, 새로운 인물/장소/상황으로 채우기
+         - 제목 패턴 유지 (예: 원본이 "숫자 + 키워드"면 동일 패턴 사용)${keywordInstruction}
       
       **분석대상 대본들:**
       ${scriptsText}
@@ -327,8 +340,14 @@ ${script}
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  title: { type: Type.STRING, description: '재장착된 새로운 주제의 제목' },
-                  rationale: { type: Type.STRING, description: '이 주제가 왜 흥행할 것인지, 어떤 공통 요소를 활용했는지 설명' },
+                  title: { 
+                    type: Type.STRING, 
+                    description: '원본들의 공통 제목 패턴을 적용한 새로운 주제 제목 (등장인물/사건은 완전히 다르게)' 
+                  },
+                  rationale: { 
+                    type: Type.STRING, 
+                    description: '원본들의 어떤 공통 구조와 기법을 적용했는지, 등장인물과 사건은 어떻게 달라졌는지 설명' 
+                  },
                 },
                 required: ['title', 'rationale'],
               },

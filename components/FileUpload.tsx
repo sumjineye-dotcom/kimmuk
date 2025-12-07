@@ -1,29 +1,29 @@
-import { Upload, X, FileText } from 'lucide-react';
+import { Upload, X, FileText, Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from './Button';
 
 interface FileUploadProps {
-  onFilesRead: (contents: string[]) => void;
+  onAnalyze: (contents: string[]) => void;
+  isLoading: boolean;
 }
 
-export const FileUpload = ({ onFilesRead }: FileUploadProps) => {
+export const FileUpload = ({ onAnalyze, isLoading }: FileUploadProps) => {
   const [files, setFiles] = useState<File[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [fileContents, setFileContents] = useState<string[]>([]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     setFiles(selectedFiles);
 
     if (selectedFiles.length > 0) {
-      setIsLoading(true);
       try {
         const contents = await Promise.all(
           selectedFiles.map(file => readFileContent(file))
         );
-        onFilesRead(contents);
+        setFileContents(contents);
       } catch (error) {
         console.error('파일 읽기 오류:', error);
-      } finally {
-        setIsLoading(false);
+        alert('파일을 읽는 중 오류가 발생했습니다.');
       }
     }
   };
@@ -39,10 +39,14 @@ export const FileUpload = ({ onFilesRead }: FileUploadProps) => {
 
   const removeFile = (index: number) => {
     const newFiles = files.filter((_, i) => i !== index);
+    const newContents = fileContents.filter((_, i) => i !== index);
     setFiles(newFiles);
-    
-    if (newFiles.length === 0) {
-      onFilesRead([]);
+    setFileContents(newContents);
+  };
+
+  const handleAnalyze = () => {
+    if (fileContents.length > 0) {
+      onAnalyze(fileContents);
     }
   };
 
@@ -97,10 +101,19 @@ export const FileUpload = ({ onFilesRead }: FileUploadProps) => {
         </div>
       )}
 
-      {isLoading && (
-        <p className="text-sm text-indigo-400 text-center">
-          파일을 읽는 중...
-        </p>
+      {/* 분석 버튼 */}
+      {files.length > 0 && (
+        <div className="flex justify-end mt-4">
+          <Button
+            onClick={handleAnalyze}
+            isLoading={isLoading}
+            disabled={isLoading || files.length === 0}
+            className="w-full md:w-auto"
+          >
+            <Sparkles size={20} />
+            {files.length}개 파일 분석 및 주제 제안받기
+          </Button>
+        </div>
       )}
     </div>
   );

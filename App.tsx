@@ -341,7 +341,7 @@ const App: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <PenTool className="text-indigo-400 mt-1 flex-shrink-0" size={20} />
                   <div>
-                    <h3 className="text-lg font-bold text-indigo-300 mb-2">분석된 구조</h3>
+                    <h3 className="text-lg font-bold text-indigo-300 mb-2">대본 분석 (구조 및 스토리텔링 기법)</h3>
                     <p className="text-gray-300 leading-relaxed whitespace-pre-line">
                       {state.structureSummary}
                     </p>

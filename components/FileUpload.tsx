@@ -14,25 +14,31 @@ export const FileUpload = ({ onAnalyze, isLoading }: FileUploadProps) => {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     
+    // 기존 파일 + 새 파일 합치기
+    const combinedFiles = [...files, ...selectedFiles];
+    
     // 최대 3개 파일 제한
-    if (selectedFiles.length > 3) {
-      alert('최대 3개의 파일만 업로드 가능합니다.');
+    if (combinedFiles.length > 3) {
+      alert(`최대 3개의 파일만 업로드 가능합니다. (현재: ${files.length}개, 추가 가능: ${3 - files.length}개)`);
+      e.target.value = ''; // 파일 입력 초기화
       return;
     }
     
-    setFiles(selectedFiles);
+    setFiles(combinedFiles);
 
     if (selectedFiles.length > 0) {
       try {
-        const contents = await Promise.all(
+        const newContents = await Promise.all(
           selectedFiles.map(file => readFileContent(file))
         );
-        setFileContents(contents);
+        setFileContents([...fileContents, ...newContents]);
       } catch (error) {
         console.error('파일 읽기 오류:', error);
         alert('파일을 읽는 중 오류가 발생했습니다.');
       }
     }
+    
+    e.target.value = ''; // 같은 파일 재선택 가능하도록
   };
 
   const readFileContent = (file: File): Promise<string> => {

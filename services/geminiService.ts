@@ -367,3 +367,66 @@ ${script}
     throw new Error('다중 대본 분석에 실패했습니다.');
   }
 };
+
+// 기존 구조 분석을 유지하고 새로운 키워드로 주제만 재생성
+export const regenerateTopicsWithKeywords = async (
+  structureSummary: string,
+  originalScript: string,
+  newKeywords: string
+): Promise<SuggestedTopic[]> => {
+  try {
+    const ai = createAI();
+    
+    const response = await ai.models.generateContent({
+      model: MODEL_NAME,
+      contents: `당신은 유튜브 콘텐츠 전문가입니다.
+
+      **이미 분석된 대본 구조:**
+      ${structureSummary}
+
+      **과제:**
+      위에 분석된 구조, 스토리텔링 기법, 제목 패턴을 **그대로 적용**하여,
+      아래 새로운 키워드가 포함된 주제 5개를 제안하세요.
+
+      **필수 요구사항:**
+      - 분석된 구조와 기법을 정확히 적용
+      - 제목 패턴 유지 (숫자 사용, 키워드 배치 등)
+      - 새로운 키워드 필수 포함: ${newKeywords}
+      - 등장인물과 사건은 완전히 다르게
+      - 원본 이야기 카피 절대 금지
+
+      **참고용 원본 대본:**
+      "${originalScript}"
+
+      5개의 새로운 주제를 JSON 배열로 반환하세요.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              title: { 
+                type: Type.STRING, 
+                description: "분석된 제목 패턴을 적용하고 새 키워드가 포함된 주제 제목" 
+              },
+              rationale: { 
+                type: Type.STRING, 
+                description: "분석된 구조를 어떻게 적용했고, 새 키워드를 어떻게 활용했는지 설명" 
+              },
+            },
+            required: ["title", "rationale"],
+          },
+        },
+      },
+    });
+
+    if (response.text) {
+      return JSON.parse(response.text) as SuggestedTopic[];
+    }
+    throw new Error('No data returned from AI');
+  } catch (error) {
+    console.error('Error regenerating topics:', error);
+    throw new Error('주제 재생성에 실패했습니다.');
+  }
+};

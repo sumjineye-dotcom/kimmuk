@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ScriptState, SuggestedTopic, ScriptStructure, ScriptStructureOption } from './types';
-import { analyzeAndSuggestTopics, generateFullScript, analyzeMultipleScripts } from './services/geminiService';
+import { analyzeAndSuggestTopics, generateFullScript, analyzeMultipleScripts, regenerateTopicsWithKeywords } from './services/geminiService';
 import { Button } from './components/Button';
 import { StepIndicator } from './components/StepIndicator';
 import { ApiKeyManager } from './components/ApiKeyManager';
@@ -134,14 +134,21 @@ const App: React.FC = () => {
   const handleRegenerate = async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      const result = uploadedScripts.length > 0
-        ? await analyzeMultipleScripts(uploadedScripts, regenerateKeywords)
-        : await analyzeAndSuggestTopics(state.originalInput, regenerateKeywords);
+      // 기존 구조 분석은 유지하고, 새로운 키워드로 주제만 재생성
+      const originalScript = uploadedScripts.length > 0 
+        ? uploadedScripts[0] 
+        : state.originalInput;
+      
+      const newTopics = await regenerateTopicsWithKeywords(
+        state.structureSummary,
+        originalScript,
+        regenerateKeywords
+      );
       
       setState(prev => ({
         ...prev,
-        topics: result.topics,
-        structureSummary: result.structureSummary,
+        topics: newTopics,
+        // structureSummary는 그대로 유지
         isLoading: false,
       }));
       setRegenerateKeywords('');

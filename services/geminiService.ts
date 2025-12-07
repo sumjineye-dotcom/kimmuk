@@ -125,6 +125,16 @@ export const analyzeAndSuggestTopics = async (inputScript: string, requiredKeywo
 
 const getStructureGuide = (structure: ScriptStructure): string => {
   switch (structure) {
+    case 'original':
+      return `**원본 대본의 구조 그대로 사용**
+      
+      아래 참고 대본에서 분석된 구조를 정확히 따라 작성하세요:
+      - 섹션 구성과 순서를 동일하게 유지
+      - 각 섹션의 길이와 비중을 유사하게
+      - 이야기 전개 방식과 감정 흐름을 그대로 적용
+      - 스토리텔링 기법(문제제기, 해결, 공감, 반전 등)을 동일하게 사용
+      - 원본의 감동과 몰입감을 재현`;
+    
     case 'in-medias-res':
       return `**인 미디어스 레스 (In Medias Res - 인트로 후킹형)**
       

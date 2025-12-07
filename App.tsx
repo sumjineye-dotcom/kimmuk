@@ -27,6 +27,12 @@ const App: React.FC = () => {
 
   const scriptStructureOptions: ScriptStructureOption[] = [
     {
+      id: 'original',
+      name: '원본 대본의 구조 그대로 사용',
+      description: '분석된 원본 구조 유지',
+      details: '원본 대본의 이야기 전개 방식, 스토리텔링 기법, 감정 흐름을 그대로 유지하면서 주제만 변경',
+    },
+    {
       id: 'in-medias-res',
       name: '인 미디어스 레스',
       description: '인트로 후킹형',

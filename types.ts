@@ -9,6 +9,7 @@ export interface AnalysisResult {
 }
 
 export type ScriptStructure = 
+  | 'original'
   | 'in-medias-res'
   | 'fiction-curved'
   | 'save-the-cat'

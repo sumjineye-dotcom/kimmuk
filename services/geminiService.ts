@@ -98,10 +98,19 @@ export const analyzeAndSuggestTopics = async (inputScript: string, requiredKeywo
     if (response.text) {
       return JSON.parse(response.text) as AnalysisResult;
     }
-    throw new Error("No data returned from AI");
-  } catch (error) {
+    throw new Error("대본 분석 결과를 받지 못했습니다.");
+  } catch (error: any) {
     console.error("Error analyzing script:", error);
-    throw new Error("대본 분석 및 주제 제안에 실패했습니다.");
+    
+    // API 키 및 쿼터 오류 처리
+    if (error.message?.includes('quota') || error.message?.includes('exceeded')) {
+      throw new Error('설정한 API 키의 사용 할당량을 초과했습니다. Google AI Studio에서 새 API 키를 발급받거나 유료 플랜으로 업그레이드하세요.');
+    }
+    if (error.message?.includes('API key')) {
+      throw new Error('API 키가 유효하지 않습니다. 우측 상단에서 API 키를 확인해주세요.');
+    }
+    
+    throw new Error("대본 분석에 실패했습니다. 다시 시도해주세요.");
   }
 };
 
@@ -285,8 +294,13 @@ export const generateFullScript = async (
     });
 
     return response.text || "대본 생성에 실패했습니다.";
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating script:", error);
+    
+    if (error.message?.includes('quota') || error.message?.includes('exceeded')) {
+      throw new Error('설정한 API 키의 사용 할당량을 초과했습니다. Google AI Studio에서 새 API 키를 발급받거나 유료 플랜으로 업그레이드하세요.');
+    }
+    
     throw new Error("최종 대본 생성에 실패했습니다.");
   }
 };
@@ -370,9 +384,14 @@ ${script}
     if (response.text) {
       return JSON.parse(response.text) as AnalysisResult;
     }
-    throw new Error('No data returned from AI');
-  } catch (error) {
+    throw new Error('대본 분석 결과를 받지 못했습니다.');
+  } catch (error: any) {
     console.error('Error analyzing multiple scripts:', error);
+    
+    if (error.message?.includes('quota') || error.message?.includes('exceeded')) {
+      throw new Error('설정한 API 키의 사용 할당량을 초과했습니다. Google AI Studio에서 새 API 키를 발급받거나 유료 플랜으로 업그레이드하세요.');
+    }
+    
     throw new Error('다중 대본 분석에 실패했습니다.');
   }
 };
@@ -436,9 +455,14 @@ export const regenerateTopicsWithKeywords = async (
     if (response.text) {
       return JSON.parse(response.text) as SuggestedTopic[];
     }
-    throw new Error('No data returned from AI');
-  } catch (error) {
+    throw new Error('주제 재생성 결과를 받지 못했습니다.');
+  } catch (error: any) {
     console.error('Error regenerating topics:', error);
+    
+    if (error.message?.includes('quota') || error.message?.includes('exceeded')) {
+      throw new Error('설정한 API 키의 사용 할당량을 초과했습니다. Google AI Studio에서 새 API 키를 발급받거나 유료 플랜으로 업그레이드하세요.');
+    }
+    
     throw new Error('주제 재생성에 실패했습니다.');
   }
 };

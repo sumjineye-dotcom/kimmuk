@@ -29,11 +29,10 @@ const App: React.FC = () => {
 
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      const result = await analyzeAndSuggestTopics(state.originalInput, requiredKeywords);
+      const topics = await analyzeAndSuggestTopics(state.originalInput, requiredKeywords);
       setState(prev => ({
         ...prev,
-        topics: result.topics,
-        structureSummary: result.structureSummary,
+        topics,
         isLoading: false,
         step: 'TOPIC_SELECTION',
       }));
@@ -46,19 +45,17 @@ const App: React.FC = () => {
     }
   };
 
-  const handleAnalyzeMultiple = async (scripts: string[], files: File[]) => {
+  const handleAnalyzeMultiple = async (scripts: string[]) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      const result = await analyzeMultipleScripts(scripts, requiredKeywords);
+      const topics = await analyzeMultipleScripts(scripts, requiredKeywords);
       setUploadedScripts(scripts);
-      setUploadedFiles(files);
       setState(prev => ({
         ...prev,
-        topics: result.topics,
-        structureSummary: result.structureSummary,
+        topics,
         isLoading: false,
         step: 'TOPIC_SELECTION',
-        originalInput: `[${scripts.length}개 파일 분석]`,
+        originalInput: `[${scripts.length}개 파일 분석]`, // 참고용
       }));
     } catch (error) {
       setState(prev => ({
@@ -93,29 +90,6 @@ const App: React.FC = () => {
     }
   };
 
-  const handleRegenerate = async () => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-    try {
-      const result = uploadedScripts.length > 0
-        ? await analyzeMultipleScripts(uploadedScripts, regenerateKeywords)
-        : await analyzeAndSuggestTopics(state.originalInput, regenerateKeywords);
-      
-      setState(prev => ({
-        ...prev,
-        topics: result.topics,
-        structureSummary: result.structureSummary,
-        isLoading: false,
-      }));
-      setRegenerateKeywords('');
-    } catch (error) {
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: "주제 재생성에 실패했습니다. 다시 시도해주세요.",
-      }));
-    }
-  };
-
   const reset = () => {
     setState({
       originalInput: '',
@@ -125,12 +99,8 @@ const App: React.FC = () => {
       isLoading: false,
       error: null,
       step: 'INPUT',
-      structureSummary: '',
     });
     setUploadedScripts([]);
-    setUploadedFiles([]);
-    setRequiredKeywords('');
-    setRegenerateKeywords('');
   };
 
   const goBackToInput = () => {
@@ -138,10 +108,9 @@ const App: React.FC = () => {
       ...prev,
       step: 'INPUT',
       topics: [],
-      structureSummary: '',
       error: null,
     }));
-    setRegenerateKeywords('');
+    // uploadedScripts와 originalInput은 유지
   };
 
   const goBackToTopics = () => {
@@ -273,21 +242,6 @@ const App: React.FC = () => {
               </Button>
             </div>
             
-            {/* 구조 요약 */}
-            {state.structureSummary && (
-              <div className="bg-gradient-to-br from-indigo-900/20 to-purple-900/10 border border-indigo-500/30 rounded-xl p-6 mb-6">
-                <div className="flex items-start gap-3">
-                  <PenTool className="text-indigo-400 mt-1 flex-shrink-0" size={20} />
-                  <div>
-                    <h3 className="text-lg font-bold text-indigo-300 mb-2">분석된 구조</h3>
-                    <p className="text-gray-300 leading-relaxed whitespace-pre-line">
-                      {state.structureSummary}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            
             <div className="grid grid-cols-1 gap-4">
               {state.topics.map((topic, idx) => (
                 <button
@@ -309,36 +263,6 @@ const App: React.FC = () => {
                   </p>
                 </button>
               ))}
-            </div>
-            
-            {/* 주제 재생성 섹션 */}
-            <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6 mt-8">
-              <div className="flex items-start gap-3 mb-4">
-                <RefreshCw className="text-indigo-400 mt-1 flex-shrink-0" size={20} />
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-200 mb-2">마음에 드는 주제가 없나요?</h3>
-                  <p className="text-sm text-gray-400 mb-4">새로운 키워드를 입력하고 다른 주제 5개를 다시 제안받아보세요.</p>
-                  
-                  <div className="flex flex-col md:flex-row gap-3">
-                    <input
-                      type="text"
-                      className="flex-1 bg-gray-950 border border-gray-700 rounded-lg p-3 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                      placeholder="새로운 키워드 입력 (예: 트렌드, 최신기술, 실전팁)"
-                      value={regenerateKeywords}
-                      onChange={(e) => setRegenerateKeywords(e.target.value)}
-                    />
-                    <Button 
-                      onClick={handleRegenerate}
-                      isLoading={state.isLoading}
-                      disabled={state.isLoading || !regenerateKeywords.trim()}
-                      className="whitespace-nowrap"
-                    >
-                      <RefreshCw size={18} />
-                      새로운 주제 5개 다시 제안받기
-                    </Button>
-                  </div>
-                </div>
-              </div>
             </div>
             
             {state.isLoading && (

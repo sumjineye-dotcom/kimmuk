@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from './Button';
 
 interface FileUploadProps {
-  onAnalyze: (contents: string[]) => void;
+  onAnalyze: (contents: string[], files: File[]) => void;
   isLoading: boolean;
 }
 
@@ -59,7 +59,7 @@ export const FileUpload = ({ onAnalyze, isLoading }: FileUploadProps) => {
 
   const handleAnalyze = () => {
     if (fileContents.length > 0) {
-      onAnalyze(fileContents);
+      onAnalyze(fileContents, files);
     }
   };
 

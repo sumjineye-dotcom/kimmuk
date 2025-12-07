@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { SuggestedTopic } from "../types";
+import { SuggestedTopic, AnalysisResult } from "../types";
 
 // API 키 가져오기: localStorage 우선, 없으면 환경 변수 사용
 const getApiKey = (): string => {
@@ -20,7 +20,7 @@ const createAI = () => {
 
 const MODEL_NAME = "gemini-2.5-flash";
 
-export const analyzeAndSuggestTopics = async (inputScript: string, requiredKeywords?: string): Promise<SuggestedTopic[]> => {
+export const analyzeAndSuggestTopics = async (inputScript: string, requiredKeywords?: string): Promise<AnalysisResult> => {
   try {
     const ai = createAI();
     
@@ -33,7 +33,7 @@ export const analyzeAndSuggestTopics = async (inputScript: string, requiredKeywo
       contents: `당신은 유튜브 바이럴 콘텐츠 전문가입니다.
       
       아래 대본을 분석하여:
-      1. **원작 제목의 핵심 구조와 패턴**을 파악하세요 (숫자, 키워드, 후킹 방식)
+      1. **원작의 핵심 구조와 패턴**을 요약하세요 (오프닝 방식, 전개 구조, 톤, 타겟 등)
       2. 그 제목 구조를 활용한 **변형 제목 5개**를 제안하세요
       
       **중요 규칙:**
@@ -42,31 +42,33 @@ export const analyzeAndSuggestTopics = async (inputScript: string, requiredKeywo
       - 다른 분야, 다른 타겟, 다른 접근법으로 재해석
       - 각 제목은 클릭을 부르는 형태로 작성${keywordInstruction}
       
-      **예시:**
-      원작: "10분만에 엑셀 마스터 - 직장인 필수 함수 5가지"
-      변형1: "7일만에 파워포인트 고수 - 프레젠터 필수 기능 7가지" (다른 툴)
-      변형2: "5분만에 노션 완성 - 학생 필수 템플릿 3가지" (다른 타겟)
-      
       입력된 대본:
       "${inputScript}"`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              title: { type: Type.STRING, description: "원작 제목을 변형한 새로운 제목" },
-              rationale: { type: Type.STRING, description: "원작과 어떤 구조를 공유하고, 스토리는 어떻게 다른지 설명" },
+          type: Type.OBJECT,
+          properties: {
+            structureSummary: { type: Type.STRING, description: "대본의 핵심 구조와 패턴 요약" },
+            topics: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING, description: "원작 제목을 변형한 새로운 제목" },
+                  rationale: { type: Type.STRING, description: "원작과 어떤 구조를 공유하고, 스토리는 어떻게 다른지 설명" },
+                },
+                required: ["title", "rationale"],
+              },
             },
-            required: ["title", "rationale"],
           },
+          required: ["structureSummary", "topics"],
         },
       },
     });
 
     if (response.text) {
-      return JSON.parse(response.text) as SuggestedTopic[];
+      return JSON.parse(response.text) as AnalysisResult;
     }
     throw new Error("No data returned from AI");
   } catch (error) {
@@ -123,7 +125,7 @@ export const generateFullScript = async (topic: SuggestedTopic, referenceScript:
 };
 
 // 여러 대본을 분석하여 공통 흥행 요소 추출 및 재장착된 주제 제안 (5개 이상)
-export const analyzeMultipleScripts = async (scripts: string[], requiredKeywords?: string): Promise<SuggestedTopic[]> => {
+export const analyzeMultipleScripts = async (scripts: string[], requiredKeywords?: string): Promise<AnalysisResult> => {
   try {
     const ai = createAI();
     
@@ -141,7 +143,7 @@ ${script}
       contents: `당신은 유튜브 콘텐츠 전문 분석가입니다.
       
       아래 여러 개의 대본을 분석하여:
-      1. **공통적인 제목 패턴과 흥행 요소**를 찾아내세요 (구조, 숫자 사용, 키워드, 후킹 방식)
+      1. **공통적인 제목 패턴과 흥행 요소**를 요약하세요 (구조, 숫자 사용, 키워드, 후킹 방식, 타겟 등)
       2. 그 패턴을 활용한 **변형 제목 5개 이상**을 제안하세요
       
       **핵심 전략:**
@@ -149,32 +151,34 @@ ${script}
       - 스토리는 완전히 다른 각도/분야/타겟으로 재해석
       - 원본의 구체적 내용 복사 금지, 패턴만 차용
       - 저작권 안전하게 "재장착"${keywordInstruction}
-      
-      **예시:**
-      공통 패턴: "N분만에 X하는 법 - 필수 Y개"
-      변형1: "5분만에 유튜브 시작 - 필수 장비 3개" (다른 분야)
-      변형2: "10일만에 블로그 수익화 - 핵심 전략 7가지" (다른 타겟)
 
       분석할 대본들:
       ${scriptsText}`,
       config: {
         responseMimeType: 'application/json',
         responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              title: { type: Type.STRING, description: '재장착된 새로운 주제의 제목' },
-              rationale: { type: Type.STRING, description: '이 주제가 왜 흥행할 것인지, 어떤 공통 요소를 활용했는지 설명' },
+          type: Type.OBJECT,
+          properties: {
+            structureSummary: { type: Type.STRING, description: '여러 대본의 공통 패턴과 흥행 요소 요약' },
+            topics: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING, description: '재장착된 새로운 주제의 제목' },
+                  rationale: { type: Type.STRING, description: '이 주제가 왜 흥행할 것인지, 어떤 공통 요소를 활용했는지 설명' },
+                },
+                required: ['title', 'rationale'],
+              },
             },
-            required: ['title', 'rationale'],
           },
+          required: ['structureSummary', 'topics'],
         },
       },
     });
 
     if (response.text) {
-      return JSON.parse(response.text) as SuggestedTopic[];
+      return JSON.parse(response.text) as AnalysisResult;
     }
     throw new Error('No data returned from AI');
   } catch (error) {

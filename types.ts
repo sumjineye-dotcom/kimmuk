@@ -3,6 +3,11 @@ export interface SuggestedTopic {
   rationale: string;
 }
 
+export interface AnalysisResult {
+  structureSummary: string;
+  topics: SuggestedTopic[];
+}
+
 export interface ScriptState {
   originalInput: string;
   topics: SuggestedTopic[];
@@ -11,4 +16,5 @@ export interface ScriptState {
   isLoading: boolean;
   error: string | null;
   step: 'INPUT' | 'TOPIC_SELECTION' | 'SCRIPT_VIEW';
+  structureSummary: string;
 }

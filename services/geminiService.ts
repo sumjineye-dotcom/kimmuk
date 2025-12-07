@@ -30,7 +30,9 @@ export const analyzeAndSuggestTopics = async (inputScript: string, requiredKeywo
     
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      content: `당신은 유튜브 콘텐츠 분석 전문가입니다.
+      contents: [{
+        role: 'user',
+        parts: [{ text: `당신은 유튜브 콘텐츠 분석 전문가입니다.
       
       **분석 목표:**
       아래 제공된 대본을 면밀히 분석하여 다음을 수행하세요:
@@ -59,7 +61,8 @@ export const analyzeAndSuggestTopics = async (inputScript: string, requiredKeywo
       
       **출력 형식:**
       - structureSummary: 위 대본의 이야기 흐름, 구조, 특징을 상세히 분석한 요약 (3-5문단)
-      - topics: 5개의 변형 주제`,
+      - topics: 5개의 변형 주제` }]
+      }],
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -232,7 +235,9 @@ export const generateFullScript = async (
     
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      content: `당신은 전문 유튜브 대본 작가입니다. 
+      contents: [{
+        role: 'user',
+        parts: [{ text: `당신은 전문 유튜브 대본 작가입니다. 
       사용자가 선택한 주제와 스토리 구조로 유튜브 대본을 작성해야 합니다.
 
       **선택된 스토리 구조:**
@@ -275,7 +280,8 @@ export const generateFullScript = async (
       2. 각 단계를 마크다운 헤더(##)로 명확히 구분하세요
       3. 선택된 주제에 맞는 **완전히 새로운 내용, 사례, 예시**를 사용하세요
       4. 앞뒤 맥락이 논리적으로 **완벽하게 연결**되도록 작성하세요
-      5. 참고 대본의 톤과 스타일을 유지하며 한국어로 자연스럽게 작성하세요`,
+      5. 참고 대본의 톤과 스타일을 유지하며 한국어로 자연스럽게 작성하세요` }]
+      }],
     });
 
     return response.text || "대본 생성에 실패했습니다.";
@@ -301,7 +307,9 @@ ${script}
 
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      content: `당신은 유튜브 콘텐츠 분석 전문가입니다.
+      contents: [{
+        role: 'user',
+        parts: [{ text: `당신은 유튜브 콘텐츠 분석 전문가입니다.
       
       **분석 목표:**
       아래 여러 대본을 면밀히 분석하여 다음을 수행하세요:
@@ -325,7 +333,8 @@ ${script}
       
       **출력 형식:**
       - structureSummary: 위 대본들의 공통 이야기 흐름, 구조, 특징을 상세히 분석한 요약 (3-5문단)
-      - topics: 5개의 변형 주제`,
+      - topics: 5개의 변형 주제` }]
+      }],
       config: {
         responseMimeType: 'application/json',
         responseSchema: {
@@ -379,7 +388,9 @@ export const regenerateTopicsWithKeywords = async (
     
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      content: `당신은 유튜브 콘텐츠 전문가입니다.
+      contents: [{
+        role: 'user',
+        parts: [{ text: `당신은 유튜브 콘텐츠 전문가입니다.
 
       **이미 분석된 대본 구조:**
       ${structureSummary}
@@ -398,7 +409,8 @@ export const regenerateTopicsWithKeywords = async (
       **참고용 원본 대본:**
       "${originalScript}"
 
-      5개의 새로운 주제를 JSON 배열로 반환하세요.`,
+      5개의 새로운 주제를 JSON 배열로 반환하세요.` }]
+      }],
       config: {
         responseMimeType: "application/json",
         responseSchema: {

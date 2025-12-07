@@ -13,6 +13,13 @@ export const FileUpload = ({ onAnalyze, isLoading }: FileUploadProps) => {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
+    
+    // 최대 3개 파일 제한
+    if (selectedFiles.length > 3) {
+      alert('최대 3개의 파일만 업로드 가능합니다.');
+      return;
+    }
+    
     setFiles(selectedFiles);
 
     if (selectedFiles.length > 0) {
@@ -60,7 +67,7 @@ export const FileUpload = ({ onAnalyze, isLoading }: FileUploadProps) => {
             <span className="text-indigo-400 font-semibold">클릭하여 파일 선택</span> 또는 드래그 앤 드롭
           </p>
           <p className="text-sm text-gray-500">
-            .txt, .md 파일 지원 (여러 파일 선택 가능)
+            .txt, .md 파일 지원 (최대 3개)
           </p>
           <input
             type="file"

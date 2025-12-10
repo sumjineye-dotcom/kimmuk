@@ -133,8 +133,8 @@ export const StoryboardSettings: React.FC<StoryboardSettingsProps> = ({
         <Button
           onClick={onGenerate}
           disabled={isLoading}
-          icon={Clapperboard}
         >
+          <Clapperboard size={18} />
           {isLoading ? '스토리보드 생성 중...' : '스토리보드 생성하기'}
         </Button>
       </div>

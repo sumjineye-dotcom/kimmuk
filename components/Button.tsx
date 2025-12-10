@@ -1,10 +1,8 @@
 import React from 'react';
-import { LucideIcon } from 'lucide-react';
 
 interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'ghost';
   isLoading?: boolean;
-  icon?: LucideIcon;
   children?: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
@@ -16,7 +14,6 @@ export const Button: React.FC<ButtonProps> = ({
   children, 
   variant = 'primary', 
   isLoading = false, 
-  icon: Icon,
   className = '', 
   disabled,
   onClick,
@@ -45,12 +42,7 @@ export const Button: React.FC<ButtonProps> = ({
           </svg>
           Processing...
         </>
-      ) : (
-        <>
-          {Icon && <Icon size={18} />}
-          {children}
-        </>
-      )}
+      ) : children}
     </button>
   );
 };

@@ -609,7 +609,8 @@ const App: React.FC = () => {
             </div>
             
             <div className="flex justify-center gap-4 pt-8">
-                <Button variant="primary" onClick={handleCreateStoryboard} icon={Clapperboard}>
+                <Button variant="primary" onClick={handleCreateStoryboard}>
+                    <Clapperboard size={18} />
                     스토리보드 만들기
                 </Button>
                 <Button variant="ghost" onClick={reset}>

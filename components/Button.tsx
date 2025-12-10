@@ -1,11 +1,15 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'ghost';
   isLoading?: boolean;
   icon?: LucideIcon;
   children?: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  className?: string;
+  type?: 'button' | 'submit' | 'reset';
 }
 
 export const Button: React.FC<ButtonProps> = ({ 
@@ -15,7 +19,8 @@ export const Button: React.FC<ButtonProps> = ({
   icon: Icon,
   className = '', 
   disabled,
-  ...props 
+  onClick,
+  type = 'button',
 }) => {
   const baseStyles = "px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
   
@@ -27,9 +32,10 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <button 
+      type={type}
       className={`${baseStyles} ${variants[variant]} ${className}`}
       disabled={isLoading || disabled}
-      {...props}
+      onClick={onClick}
     >
       {isLoading ? (
         <>

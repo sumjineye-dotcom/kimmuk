@@ -1,72 +1,63 @@
 /**
  * 이미지 생성 서비스
- * Hugging Face Inference API를 사용하여 무료로 이미지 생성
+ * Google Imagen 3 API를 사용하여 이미지 생성
  */
 
-const getHuggingFaceApiKey = (): string => {
+import { GoogleGenAI } from "@google/genai";
+
+const getApiKey = (): string => {
   const storedKey = typeof window !== 'undefined' 
-    ? localStorage.getItem('huggingface_api_key') 
+    ? localStorage.getItem('gemini_api_key') 
     : null;
   
-  return storedKey || import.meta.env.VITE_HUGGINGFACE_API_KEY || '';
+  return storedKey || import.meta.env.VITE_GEMINI_API_KEY || '';
 };
 
 /**
- * Hugging Face API를 사용하여 이미지 생성
+ * Google Imagen 3 API를 사용하여 이미지 생성
  */
 export const generateImage = async (
   prompt: string,
   aspectRatio: '16:9' | '9:16' = '16:9'
 ): Promise<string> => {
-  const apiKey = getHuggingFaceApiKey();
+  const apiKey = getApiKey();
   
   if (!apiKey) {
-    // API 키가 없으면 플레이스홀더 이미지 반환
-    console.warn('Hugging Face API 키가 없습니다. 플레이스홀더 이미지를 사용합니다.');
+    console.warn('Gemini API 키가 없습니다. 플레이스홀더 이미지를 사용합니다.');
     const [width, height] = aspectRatio === '16:9' ? [1024, 576] : [576, 1024];
-    return `https://placehold.co/${width}x${height}/1a1a1a/white?text=${encodeURIComponent('Scene Image')}`;
+    return `https://placehold.co/${width}x${height}/1a1a1a/white?text=${encodeURIComponent('API Key Required')}`;
   }
 
   try {
-    // Stable Diffusion 모델 사용
-    const response = await fetch(
-      'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            num_inference_steps: 30,
-            guidance_scale: 7.5,
-          },
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('Hugging Face API error:', error);
-      
-      // 에러 시 플레이스홀더 반환
-      const [width, height] = aspectRatio === '16:9' ? [1024, 576] : [576, 1024];
-      return `https://placehold.co/${width}x${height}/1a1a1a/white?text=${encodeURIComponent('Error')}`;
-    }
-
-    // Blob으로 이미지 받기
-    const blob = await response.blob();
-    const imageUrl = URL.createObjectURL(blob);
+    const ai = new GoogleGenAI({ apiKey });
     
-    return imageUrl;
-  } catch (error) {
+    // Imagen 3 모델 사용
+    const response = await ai.models.generateImages({
+      model: 'imagen-3.0-generate-001',
+      prompt: prompt,
+      config: {
+        numberOfImages: 1,
+        aspectRatio: aspectRatio === '16:9' ? '16:9' : '9:16',
+      },
+    });
+
+    if (response.images && response.images.length > 0) {
+      // 첫 번째 이미지의 base64 데이터 반환
+      const imageData = response.images[0];
+      return `data:image/png;base64,${imageData}`;
+    }
+    
+    throw new Error('이미지 생성 결과를 받지 못했습니다.');
+  } catch (error: any) {
     console.error('Error generating image:', error);
+    
+    if (error.message?.includes('quota') || error.message?.includes('exceeded')) {
+      console.error('API 사용 할당량을 초과했습니다.');
+    }
     
     // 에러 시 플레이스홀더 반환
     const [width, height] = aspectRatio === '16:9' ? [1024, 576] : [576, 1024];
-    return `https://placehold.co/${width}x${height}/1a1a1a/white?text=${encodeURIComponent('Error')}`;
+    return `https://placehold.co/${width}x${height}/1a1a1a/white?text=${encodeURIComponent('Generation Failed')}`;
   }
 };
 

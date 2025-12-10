@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { ScriptState, SuggestedTopic, ScriptStructure, ScriptStructureOption } from './types';
-import { analyzeAndSuggestTopics, generateFullScript, analyzeMultipleScripts, regenerateTopicsWithKeywords } from './services/geminiService';
+import { ScriptState, SuggestedTopic, ScriptStructure, ScriptStructureOption, StoryboardSettings, StoryboardScene } from './types';
+import { analyzeAndSuggestTopics, generateFullScript, analyzeMultipleScripts, regenerateTopicsWithKeywords, analyzeScriptForStoryboard } from './services/geminiService';
+import { generateImage } from './services/imageService';
 import { Button } from './components/Button';
 import { StepIndicator } from './components/StepIndicator';
 import { ApiKeyManager } from './components/ApiKeyManager';
 import { FileUpload } from './components/FileUpload';
-import { Copy, RefreshCw, PenTool, Sparkles, Youtube, ArrowLeft } from 'lucide-react';
+import { StoryboardSettings as StoryboardSettingsComponent } from './components/StoryboardSettings';
+import { StoryboardViewer } from './components/StoryboardViewer';
+import { Copy, RefreshCw, PenTool, Sparkles, Youtube, ArrowLeft, Clapperboard } from 'lucide-react';
 
 const App: React.FC = () => {
   const [state, setState] = useState<ScriptState>({
@@ -219,6 +222,110 @@ const App: React.FC = () => {
   const copyToClipboard = () => {
     navigator.clipboard.writeText(state.generatedScript);
     alert("대본이 클립보드에 복사되었습니다!");
+  };
+
+  // 스토리보드 관련 핸들러
+  const handleCreateStoryboard = () => {
+    setState(prev => ({
+      ...prev,
+      step: 'STORYBOARD_SETTINGS',
+      storyboardSettings: {
+        visualStyle: 'cinematic',
+        engine: 'nano',
+        aspectRatio: '16:9',
+        sceneCount: 30,
+      },
+    }));
+  };
+
+  const handleStoryboardSettingsChange = (settings: StoryboardSettings) => {
+    setState(prev => ({
+      ...prev,
+      storyboardSettings: settings,
+    }));
+  };
+
+  const handleGenerateStoryboard = async () => {
+    if (!state.generatedScript || !state.storyboardSettings) return;
+
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      // 1단계: 대본을 씬으로 분석
+      const scenes = await analyzeScriptForStoryboard(
+        state.generatedScript,
+        state.storyboardSettings.sceneCount,
+        state.storyboardSettings.visualStyle
+      );
+
+      setState(prev => ({
+        ...prev,
+        storyboardScenes: scenes,
+        step: 'STORYBOARD_VIEW',
+        isLoading: false,
+      }));
+
+      // 2단계: 이미지를 하나씩 생성 (백그라운드)
+      generateStoryboardImages(scenes, state.storyboardSettings.aspectRatio);
+    } catch (error: any) {
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error.message || "스토리보드 생성에 실패했습니다.",
+      }));
+    }
+  };
+
+  const generateStoryboardImages = async (scenes: StoryboardScene[], aspectRatio: '16:9' | '9:16') => {
+    for (let i = 0; i < scenes.length; i++) {
+      const scene = scenes[i];
+      
+      // 해당 씬을 생성 중으로 표시
+      setState(prev => ({
+        ...prev,
+        storyboardScenes: prev.storyboardScenes?.map(s =>
+          s.sceneNumber === scene.sceneNumber
+            ? { ...s, isGenerating: true }
+            : s
+        ),
+      }));
+
+      try {
+        // 이미지 생성
+        const imageUrl = await generateImage(scene.visualPrompt, aspectRatio);
+        
+        // 생성된 이미지로 업데이트
+        setState(prev => ({
+          ...prev,
+          storyboardScenes: prev.storyboardScenes?.map(s =>
+            s.sceneNumber === scene.sceneNumber
+              ? { ...s, imageUrl, isGenerating: false }
+              : s
+          ),
+        }));
+      } catch (error) {
+        console.error(`Error generating image for scene ${scene.sceneNumber}:`, error);
+        
+        // 에러 표시
+        setState(prev => ({
+          ...prev,
+          storyboardScenes: prev.storyboardScenes?.map(s =>
+            s.sceneNumber === scene.sceneNumber
+              ? { ...s, isGenerating: false }
+              : s
+          ),
+        }));
+      }
+    }
+  };
+
+  const goBackToScript = () => {
+    setState(prev => ({
+      ...prev,
+      step: 'SCRIPT_VIEW',
+      storyboardSettings: undefined,
+      storyboardScenes: undefined,
+    }));
   };
 
   return (
@@ -501,7 +608,54 @@ const App: React.FC = () => {
               </article>
             </div>
             
-            <div className="flex justify-center pt-8">
+            <div className="flex justify-center gap-4 pt-8">
+                <Button variant="primary" onClick={handleCreateStoryboard} icon={Clapperboard}>
+                    스토리보드 만들기
+                </Button>
+                <Button variant="ghost" onClick={reset}>
+                    새로운 대본 만들기
+                </Button>
+            </div>
+          </div>
+        )}
+
+        {/* View 5: Storyboard Settings */}
+        {state.step === 'STORYBOARD_SETTINGS' && state.storyboardSettings && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex items-center gap-2 mb-6">
+              <Button variant="ghost" onClick={goBackToScript} className="text-sm">
+                <ArrowLeft size={18} />
+                대본으로 돌아가기
+              </Button>
+            </div>
+
+            <StoryboardSettingsComponent
+              settings={state.storyboardSettings}
+              onSettingsChange={handleStoryboardSettingsChange}
+              onGenerate={handleGenerateStoryboard}
+              isLoading={state.isLoading}
+            />
+          </div>
+        )}
+
+        {/* View 6: Storyboard View */}
+        {state.step === 'STORYBOARD_VIEW' && state.storyboardScenes && state.storyboardSettings && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" onClick={goBackToScript} className="text-sm">
+                  <ArrowLeft size={18} />
+                  대본으로 돌아가기
+                </Button>
+              </div>
+            </div>
+
+            <StoryboardViewer 
+              scenes={state.storyboardScenes} 
+              aspectRatio={state.storyboardSettings.aspectRatio}
+            />
+
+            <div className="flex justify-center gap-4 pt-8">
                 <Button variant="ghost" onClick={reset}>
                     새로운 대본 만들기
                 </Button>

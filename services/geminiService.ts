@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { SuggestedTopic, AnalysisResult, ScriptStructure } from "../types";
+import { SuggestedTopic, AnalysisResult, ScriptStructure, StoryboardScene, VisualStyle } from "../types";
 
 // API 키 가져오기: localStorage 우선, 없으면 환경 변수 사용
 const getApiKey = (): string => {
@@ -492,3 +492,92 @@ export const regenerateTopicsWithKeywords = async (
     throw new Error('주제 재생성에 실패했습니다.');
   }
 };
+
+/**
+ * 대본을 분석하여 씬별로 분리하고 비주얼 프롬프트 생성
+ */
+export const analyzeScriptForStoryboard = async (
+  script: string,
+  sceneCount: number,
+  visualStyle: VisualStyle
+): Promise<StoryboardScene[]> => {
+  try {
+    const ai = createAI();
+    
+    const styleDescriptions: Record<VisualStyle, string> = {
+      'cinematic': 'cinematic photography, realistic, film grain, dramatic lighting, professional camera work',
+      'k-drama': 'Korean drama style, soft lighting, emotional atmosphere, clean production',
+      'webtoon': 'webtoon illustration style, Korean manhwa, digital art, clean lines, vibrant colors',
+      'pixar': '3D animation, Pixar style, Disney quality, colorful, expressive characters',
+      'folk-painting': 'Korean traditional folk painting, minhwa style, vibrant colors, flat perspective',
+      'fairy-tale': 'fairy tale illustration, storybook art, whimsical, watercolor style',
+      'diorama': 'miniature diorama, handcrafted scene, tilt-shift photography, detailed model',
+      'wool-felt': 'wool felt character, handmade felt art, soft textures, cute style',
+    };
+    
+    const response = await ai.models.generateContent({
+      model: MODEL_NAME,
+      contents: [{
+        role: 'user',
+        parts: [{ text: `당신은 영화 스토리보드 전문가입니다.
+
+**작업:**
+아래 대본을 정확히 ${sceneCount}개의 씬으로 나누고, 각 씬의 시각적 설명과 이미지 생성용 프롬프트를 작성하세요.
+
+**비주얼 스타일:** ${visualStyle}
+**스타일 설명:** ${styleDescriptions[visualStyle]}
+
+**대본:**
+${script}
+
+**요구사항:**
+1. 대본의 스토리 흐름을 유지하며 ${sceneCount}개 씬으로 균등하게 분배
+2. 각 씬은 핵심 순간과 감정을 포착해야 함
+3. visualPrompt는 영어로 작성하고 선택된 비주얼 스타일을 반영
+4. description은 한국어로 씬의 내용을 간결하게 설명
+
+정확히 ${sceneCount}개의 씬을 JSON 배열로 반환하세요.` }]
+      }],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              sceneNumber: { 
+                type: Type.NUMBER, 
+                description: "씬 번호 (1부터 시작)" 
+              },
+              description: { 
+                type: Type.STRING, 
+                description: "씬의 내용을 한국어로 간결하게 설명" 
+              },
+              visualPrompt: { 
+                type: Type.STRING, 
+                description: "이미지 생성을 위한 영어 프롬프트 (비주얼 스타일 포함)" 
+              },
+            },
+            required: ["sceneNumber", "description", "visualPrompt"],
+          },
+        },
+      },
+    });
+
+    if (response.text) {
+      const scenes = JSON.parse(response.text) as StoryboardScene[];
+      // sceneNumber 순서대로 정렬
+      return scenes.sort((a, b) => a.sceneNumber - b.sceneNumber);
+    }
+    throw new Error('씬 분석 결과를 받지 못했습니다.');
+  } catch (error: any) {
+    console.error('Error analyzing script for storyboard:', error);
+    
+    if (error.message?.includes('quota') || error.message?.includes('exceeded')) {
+      throw new Error('API 사용 할당량을 초과했습니다. 새 API 키를 발급받거나 유료 플랜으로 업그레이드하세요.');
+    }
+    
+    throw new Error('씬 분석에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
+  }
+};
+

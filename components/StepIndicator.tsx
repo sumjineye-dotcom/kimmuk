@@ -11,6 +11,11 @@ export const StepIndicator = ({ currentStep }: StepIndicatorProps) => {
     { id: 'SCRIPT_VIEW', label: '3. 대본 완성' },
   ];
 
+  // 스토리보드 스텝은 별도 표시하지 않음 (옵셔널)
+  if (currentStep === 'STORYBOARD_SETTINGS' || currentStep === 'STORYBOARD_VIEW') {
+    return null;
+  }
+
   return (
     <div className="flex items-center justify-center w-full mb-12">
       <div className="flex items-center gap-4">

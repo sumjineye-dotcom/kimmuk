@@ -1,14 +1,18 @@
 import React from 'react';
+import { LucideIcon } from 'lucide-react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost';
   isLoading?: boolean;
+  icon?: LucideIcon;
+  children?: React.ReactNode;
 }
 
 export const Button: React.FC<ButtonProps> = ({ 
   children, 
   variant = 'primary', 
   isLoading = false, 
+  icon: Icon,
   className = '', 
   disabled,
   ...props 
@@ -35,7 +39,12 @@ export const Button: React.FC<ButtonProps> = ({
           </svg>
           Processing...
         </>
-      ) : children}
+      ) : (
+        <>
+          {Icon && <Icon size={18} />}
+          {children}
+        </>
+      )}
     </button>
   );
 };

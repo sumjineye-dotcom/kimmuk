@@ -22,6 +22,38 @@ export interface ScriptStructureOption {
   details: string;
 }
 
+export type VisualStyle = 
+  | 'cinematic'
+  | 'k-drama'
+  | 'webtoon'
+  | 'pixar'
+  | 'folk-painting'
+  | 'fairy-tale'
+  | 'diorama'
+  | 'wool-felt';
+
+export interface VisualStyleOption {
+  id: VisualStyle;
+  name: string;
+  nameKo: string;
+  description: string;
+}
+
+export interface StoryboardScene {
+  sceneNumber: number;
+  description: string;
+  visualPrompt: string;
+  imageUrl?: string;
+  isGenerating?: boolean;
+}
+
+export interface StoryboardSettings {
+  visualStyle: VisualStyle;
+  engine: 'nano' | 'banana' | 'pro';
+  aspectRatio: '16:9' | '9:16';
+  sceneCount: number;
+}
+
 export interface ScriptState {
   originalInput: string;
   topics: SuggestedTopic[];
@@ -30,6 +62,8 @@ export interface ScriptState {
   generatedScript: string;
   isLoading: boolean;
   error: string | null;
-  step: 'INPUT' | 'TOPIC_SELECTION' | 'STRUCTURE_SELECTION' | 'SCRIPT_VIEW';
+  step: 'INPUT' | 'TOPIC_SELECTION' | 'STRUCTURE_SELECTION' | 'SCRIPT_VIEW' | 'STORYBOARD_SETTINGS' | 'STORYBOARD_VIEW';
   structureSummary: string;
+  storyboardSettings?: StoryboardSettings;
+  storyboardScenes?: StoryboardScene[];
 }
